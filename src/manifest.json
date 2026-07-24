@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "name": "SnapOut Capture",
+    "version": "1.0.0",
+    "description": "Captures a webpage's layout and styles for import into Figma.",
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "action": {
+        "default_popup": "popup/popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    }
+}
