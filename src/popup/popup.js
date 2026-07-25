@@ -3,7 +3,7 @@ document.getElementById("captureBtn").addEventListener("click", async () => {
 
   const [{ result }] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    func: () => {
+    func: async () => {
       const SKIP_TAGS = new Set([
         "script",
         "style",
@@ -12,7 +12,22 @@ document.getElementById("captureBtn").addEventListener("click", async () => {
         "meta",
       ]);
 
-      function walk(el) {
+      async function imageToBase64(url) {
+        try {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (err) {
+          return null; // CORS-blocked or failed to load — skip gracefully
+        }
+      }
+
+      async function walk(el) {
         const tag = el.tagName.toLowerCase();
         if (SKIP_TAGS.has(tag)) return null;
 
@@ -33,10 +48,19 @@ document.getElementById("captureBtn").addEventListener("click", async () => {
           color: style.color,
           fontSize: style.fontSize,
           fontWeight: style.fontWeight,
+          fontFamily: style.fontFamily,
+          display: style.display,
+          flexDirection: style.flexDirection,
+          justifyContent: style.justifyContent,
+          alignItems: style.alignItems,
+          gap: style.gap,
           children: [],
         };
 
-        // Only capture direct text (not text belonging to child elements)
+        if (tag === "img" && el.src) {
+          node.imageData = await imageToBase64(el.src);
+        }
+
         const directText = Array.from(el.childNodes)
           .filter((n) => n.nodeType === Node.TEXT_NODE)
           .map((n) => n.textContent.trim())
@@ -48,14 +72,14 @@ document.getElementById("captureBtn").addEventListener("click", async () => {
         }
 
         for (const child of el.children) {
-          const childNode = walk(child);
+          const childNode = await walk(child);
           if (childNode) node.children.push(childNode);
         }
 
         return node;
       }
 
-      return walk(document.body);
+      return await walk(document.body);
     },
   });
 
