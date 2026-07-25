@@ -54,6 +54,11 @@ document.getElementById("captureBtn").addEventListener("click", async () => {
           justifyContent: style.justifyContent,
           alignItems: style.alignItems,
           gap: style.gap,
+          borderRadius: style.borderRadius,
+          borderWidth: style.borderWidth,
+          borderColor: style.borderColor,
+          borderStyle: style.borderStyle,
+          boxShadow: style.boxShadow,
           children: [],
         };
 
